@@ -8,42 +8,32 @@ namespace sdk_csharp_simpleExample
     {
         public static void Main(string[] args)
         {
-            // Initialize client without setting HttpClient explicitly
-            // When no HttpClient is provided, SmartsheetBuilder automatically uses DefaultHttpClient
-            Console.WriteLine("Simple Example - Smartsheet API C# SDK");
-            Console.WriteLine("========================================="); 
-            SmartsheetClient smartsheet = new SmartsheetBuilder()
-                .SetAccessToken(Environment.GetEnvironmentVariable("SMARTSHEET_ACCESS_TOKEN") ?? "your_token_here")
-                // No HttpClient set - DefaultHttpClient will be used automatically
-                .Build();
-            
-            // The DefaultHttpClient provides standard HTTP functionality with built-in
-            // handling for rate limiting, retry logic, and proper error handling
+        SmartsheetClient smartsheet = new SmartsheetBuilder()
+            .SetAccessToken(Environment.GetEnvironmentVariable("SMARTSHEET_ACCESS_TOKEN") ?? "your_token_here")
+            .Build();
 
-            // List all sheets
-            PaginatedResult<Sheet> sheets = smartsheet.SheetResources.ListSheets(new List<SheetInclusion> { SheetInclusion.SHEET_VERSION });
-            Console.WriteLine("Found " + sheets.TotalCount + " sheets");
+        // Si no pasas ningún ID, lista todas tus hojas con su ID
+        if (args.Length == 0)
+        {
+            PaginatedResult<Sheet> sheets = smartsheet.SheetResources.ListSheets(
+                paging: new PaginationParameters(true, null, null));   // true = traer todas, no solo la primera página
 
-            if (sheets.TotalCount > 0)
-            {
-                long sheetId = (long)sheets.Data[0].Id;                // Default first sheet
+            Console.WriteLine($"Tienes {sheets.TotalCount} hojas:");
+            foreach (Sheet s in sheets.Data)
+                Console.WriteLine($"  {s.Id}  {s.Name}");
 
-                Console.WriteLine("Loading sheet id: " + sheetId);
-
-                // Load the entire sheet
-                var sheet = smartsheet.SheetResources.GetSheet(sheetId);
-                Console.WriteLine("Loaded " + sheet.Rows.Count + " rows from sheet: " + sheet.Name);
-
-                // Display the first 5 rows
-                foreach (Row row in sheet.Rows.Take(5))
-                {
-                    dumpRow(row, sheet.Columns);
-                }
-            }
-
-            Console.WriteLine("Done (Hit enter)");                      // Keep console window open
-            Console.ReadLine();
+            Console.WriteLine("\nPara abrir una:  dotnet run -- <ID>");
+            return;
         }
+
+    // Si pasas un ID, abre esa hoja
+    long sheetId = long.Parse(args[0]);
+    Sheet sheet = smartsheet.SheetResources.GetSheet(sheetId);
+    Console.WriteLine($"Hoja: {sheet.Name}  ({sheet.Rows.Count} filas)\n");
+
+    foreach (Row row in sheet.Rows.Take(5))
+        dumpRow(row, sheet.Columns);
+}
 
         // Display row contents
         static void dumpRow(Row row, IList<Column> columns)
