@@ -1,0 +1,9 @@
+{
+  "name": "Smartsheet C# SDK",
+  "image": "mcr.microsoft.com/devcontainers/dotnet:8.0",
+  "secrets": {
+    "SMARTSHEET_ACCESS_TOKEN": {
+      "description": "Token de acceso de la API de Smartsheet"
+    }
+  }
+}
